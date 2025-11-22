@@ -1,0 +1,74 @@
+<?php
+
+/** @var $block \Mcp\LlamaMcp\Block\Adminhtml\Chat */
+$ajaxUrl = $block->getUrl('claudemcp/chat/send');
+?>
+<div class="admin__page-section">
+    <h1>Admin Chat - MCP (Using Llama Model and mysql_mcp_server)</h1>
+    <div id="claude-chat" style="max-width:900px;">
+        <div id="claude-messages" style="min-height:200px;border:1px solid #ddd;padding:12px;margin-bottom:12px;background:#fff;overflow:auto;"></div>
+        <textarea id="claude-input" rows="4" style="width:100%;border:1px solid #ddd;padding:12px;margin-bottom:12px;background:#fff;overflow:auto;" placeholder="Ask Claude... (e.g. 'Top sales of the month')"></textarea>
+        <button id="claude-send" class="action-default action-primary" style="margin-top:6px;">Send</button>
+    </div>
+</div>
+
+
+<script>
+    require(['jquery'], function($) {
+        $('#claude-send').on('click', function() {
+            var prompt = $('#claude-input').val();
+            if (!prompt) return;
+            $('#claude-messages').append('<div><strong style="margin-bottom: 5px;">You:</strong> ' + $('<div/>').text(prompt).html() + '</div>');
+            $('#claude-input').val('');
+            $.ajax({
+                url: '<?php echo $ajaxUrl ?>',
+                method: 'POST',
+                data: {
+                    form_key: window.FORM_KEY,
+                    prompt: prompt
+                },
+                showLoader: true,
+                success: function(res) {
+                    const response = res.response;
+
+                    console.log("response =====");
+                    console.log(response);
+                    console.log(response.result);
+                    console.log(response.result.error);
+
+                    const out = response.result || response.result.error || 'Invalid response from server.';
+
+                    if (!response.result.error && response.result && response.result.rows && Array.isArray(response.result.rows)) {
+                        let html = '<div><strong>Claude (MCP):</strong><br/><table style="margin:8px 0;border-collapse:collapse;background:#f9f9f9;">';
+                        // Get table headers from first row
+                        const firstRow = response.result.rows[0];
+                        if (firstRow) {
+                            html += '<tr>';
+                            Object.keys(firstRow).forEach(function(key) {
+                                html += '<th style="border:1px solid #ccc;padding:4px 8px;background:#eee;">' + $('<div/>').text(key).html() + '</th>';
+                            });
+                            html += '</tr>';
+                            // Table rows
+                            response.result.rows.forEach(function(row) {
+                                html += '<tr>';
+                                Object.values(row).forEach(function(val) {
+                                    html += '<td style="border:1px solid #ccc;padding:4px 8px;">' + $('<div/>').text(val).html() + '</td>';
+                                });
+                                html += '</tr>';
+                            });
+                        }
+                        html += '</table></div>';
+                        $('#claude-messages').append(html);
+                    } else {
+                        $('#claude-messages').append('<div><strong>Claude (MCP):</strong> <pre style="white-space:pre-wrap;">' + $('<div/>').text(response.result || response.result.error || 'Invalid response from server.').html() + '</pre></div>');
+                    }
+                    // autoscroll
+                    $('#claude-messages').scrollTop($('#claude-messages')[0].scrollHeight);
+                },
+                error: function(xhr) {
+                    $('#claude-messages').append('<div style="color:red">Error: ' + xhr.responseText + '</div>');
+                }
+            })
+        });
+    });
+</script>

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/menu.xsd">
+    <menu>
+        <add id="Mcp_LlamaMcp::menu" title="MCP" translate="title"
+            module="Magento_Backend" sortOrder="90" parent="Magento_Backend::content"
+            resource="Mcp_LlamaMcp::mcp_chat" />
+
+        <add id="Mcp_LlamaMcp::mcp_chat"
+            title="Claude MCP"
+            module="Mcp_LlamaMcp"
+            sortOrder="900"
+            resource="Mcp_LlamaMcp::mcp_chat"
+            parent="Mcp_LlamaMcp::menu"
+            action="claudemcp/index/index" />
+    </menu>
+</config>
